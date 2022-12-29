@@ -1,3 +1,3 @@
-export interface WishesFolders {
+export interface WishesFoldersInterface {
 	folders: any[]
 }
