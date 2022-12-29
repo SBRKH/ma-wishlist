@@ -4,66 +4,62 @@ import Users from "../database/models/Users";
 import {generateAccessToken, generateRefreshToken} from "./JwtService";
 import {ApiResponse} from "../payload/ApiResponse";
 import users from "../database/models/Users";
+import * as jwt from "jsonwebtoken";
 
 export const signup = (payload: SignupInterface): Promise<any> => {
-	return bcrypt.hash(payload.password, 10).then((hash) => {
-		const user = new Users({
-			email: payload.email,
-			password: hash,
-			firstname: payload.firstname,
-			lastname: payload.lastname
-		});
+	const salt = bcrypt.genSaltSync(10);
+	const hash = bcrypt.hashSync(payload.password, salt);
 
-		return user.save();
+	const user = new Users({
+		email: payload.email,
+		password: hash,
+		firstname: payload.firstname,
+		lastname: payload.lastname
 	});
+
+	return user.save();
 }
 
 export const login = async (payload: LoginInterface): Promise<ApiResponse<any>> => {
 	const user = await users.findOne({email: payload.email});
 
 	if (user) {
-		const {err, data} = bcrypt.compare(payload.password, user.password);
-		if (err) {
-			throw err;
-		}
+		const match = await bcrypt.compareSync(payload.password, user.password);
 
-		if (!data) {
-			new ApiResponse<any>()
-				.withHttpStatus(501)
+		if (!match) {
+			return new ApiResponse<any>()
+				.withSuccess(false)
+				.withHttpStatus(401)
 				.withMessage("Vérifier vos identifiants")
 				.build();
 		}
 
 		const accessToken = generateAccessToken({email: user.email, lastname: user.lastname, firstname: user.firstname});
 		const refreshToken = generateRefreshToken({email: user.email, lastname: user.lastname, firstname: user.firstname});
+		const {firstname, lastname, email, _id} = user;
 
 		return new ApiResponse<any>()
-			.withPayload({accessToken: accessToken, refreshToken: refreshToken})
+			.withSuccess(true)
+			.withPayload({accessToken: accessToken, refreshToken: refreshToken, firstname, lastname, email, id: _id})
 			.build();
 	}
 
 	return new ApiResponse<any>()
-		.withHttpStatus(501)
+		.withSuccess(false)
+		.withHttpStatus(401)
 		.withMessage("Vérifier vos identifiants")
 		.build();
 }
 
-export const refreshToken = async (req) => {
-	const user = await users.findOne({email: req.userEmail});
-
-	if (user) {
-		const accessToken = generateAccessToken({email: user.email, lastname: user.lastname, firstname: user.firstname});
-		const refreshToken = generateRefreshToken({email: user.email, lastname: user.lastname, firstname: user.firstname});
-
-		return new ApiResponse<any>()
-			.withPayload({accessToken: accessToken, refreshToken: refreshToken})
-			.build();
+export const refreshToken = async (authorization: string) => {
+	if (typeof authorization === "undefined") {
+		return new ApiResponse().withHttpStatus(403).withSuccess(false).build();
 	}
 
+	const bearer = authorization.split(" ");
+	const token = bearer[1];
+	const { firstname, lastname, email, password, id} = jwt.decode(token);
+	const accessToken = jwt.sign({ firstname, lastname, email, password, id}, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1h" });
 
-	return new ApiResponse<any>()
-		.withHttpStatus(501)
-		.withMessage("Vérifier vos identifiants")
-		.build();
-
+	return new ApiResponse().withPayload({ accessToken}).build();
 }

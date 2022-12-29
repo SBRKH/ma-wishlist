@@ -1,10 +1,12 @@
 import React from "react";
-import {AuthProvider} from "../hooks/useAuth";
-import {MainRoutes} from "../router/MainRoutes";
-import {Box, CssBaseline, Paper} from "@mui/material";
+import {MainRoutes} from "../core/router/MainRoutes";
+import {CssBaseline, Paper} from "@mui/material";
 import {createTheme, ThemeProvider} from "@mui/material/styles";
+import {useUser} from "../hooks/useUser";
+import {MainAppBar} from "../core/MainAppBar";
 
 export const Main = () => {
+	const user = useUser();
 	const theme = createTheme({
 		palette: {
 			primary: {
@@ -19,8 +21,8 @@ export const Main = () => {
 			}
 		},
 		components: {
-			MuiOutlinedInput:{
-				styleOverrides:{
+			MuiOutlinedInput: {
+				styleOverrides: {
 					notchedOutline: {
 						borderColor: "#406f72",
 					}
@@ -38,18 +40,17 @@ export const Main = () => {
 
 	return (
 		<ThemeProvider theme={theme}>
-			<AuthProvider>
-				<CssBaseline />
-				<Paper sx={{
-					display: 'flex',
-					height: '100vh',
-					backgroundColor: "#f3f3f3",
-					overflow: 'hidden',
-					position: 'relative',
-					}}>
-						<MainRoutes />
-				</Paper>
-			</AuthProvider>
+			<CssBaseline/>
+			<Paper sx={{
+				display: 'flex',
+				height: '100vh',
+				backgroundColor: "#f3f3f3",
+				overflow: 'hidden',
+				position: 'relative',
+			}}>
+				{user && <MainAppBar />}
+				<MainRoutes/>
+			</Paper>
 		</ThemeProvider>
 	);
 }

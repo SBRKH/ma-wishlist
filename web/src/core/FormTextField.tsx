@@ -1,31 +1,33 @@
-import React, {useMemo} from "react";
-import {Controller} from "react-hook-form";
-import {FormHelperText, OutlinedInput, TextField, TextFieldProps} from "@mui/material";
+import React, { useMemo} from "react";
+import {Control, Controller, UseControllerProps} from "react-hook-form";
+import {InputBaseProps, OutlinedInput, Tooltip} from "@mui/material";
+import {Error} from "@mui/icons-material";
 
-type FormTextFieldProps = TextFieldProps & {
+type FormTextFieldProps = InputBaseProps & Omit<UseControllerProps, 'control'> & {
 	name: string,
-	control: any,
-	label: string
+	label: string,
+	control: Control<any>,
 }
 
 export const FormTextField = (props: FormTextFieldProps) => {
-	const {control, name, label, ...rest} = props;
-	const error = useMemo(() => control.getFieldState(name).error,[control.getFieldState(name)]);
+	const {control, name, label, rules, ...rest} = props;
+	const error = useMemo(() => control.getFieldState(name).error, [control.getFieldState(name), control, name]);
 
 	return (
 		<Controller
 			name={name}
 			control={control}
+			rules={rules}
 			{...rest}
-			render={({field}) => <>
-				<OutlinedInput fullWidth={rest.fullWidth}
+			render={({field}) => <OutlinedInput fullWidth={rest.fullWidth}
 																					placeholder={label}
-																					error={error != null}
+																					error={Boolean(error)}
 																					size={"small"}
+																					endAdornment={error?.message ?
+																						<Tooltip title={error.message}><Error
+																							color={"error"}/></Tooltip> : rest.endAdornment}
 																					{...field} />
-				<FormHelperText error={error != null}>{error?.message ?? ""}</FormHelperText>
-				</>
-				}
+			}
 		/>
 	);
 }

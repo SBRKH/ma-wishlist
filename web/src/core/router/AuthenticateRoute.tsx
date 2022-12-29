@@ -1,9 +1,9 @@
 import React, {PropsWithChildren} from "react";
 import {Navigate} from "react-router-dom";
-import {useAuth} from "../hooks/useAuth";
+import {useUser} from "../../hooks/useUser";
 
 export const AuthenticateRoute = ({ children }: PropsWithChildren<any>) => {
-	const { user } = useAuth()!;
+	const user = useUser()!;
 
 	console.log("user==", user);
 

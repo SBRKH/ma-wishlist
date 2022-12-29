@@ -1,7 +1,8 @@
 export class ApiResponse<T> {
 	private httpStatus = 201;
 	private payload: T;
-	private message = "Succès";
+	private message = "Success";
+	private success: boolean
 
 	constructor() {
 	}
@@ -21,6 +22,11 @@ export class ApiResponse<T> {
 		return this;
 	}
 
+	withSuccess(success: boolean) {
+		this.success = success;
+		return this;
+	}
+
 	build(): ApiResponse<T> {
 		return this;
 	}
@@ -35,5 +41,9 @@ export class ApiResponse<T> {
 
 	getMessage() {
 		return this.message;
+	}
+
+	getSuccess() {
+		return this.success;
 	}
 }

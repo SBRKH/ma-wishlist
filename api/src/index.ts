@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import * as morgan from 'morgan';
 import { connect } from './database/database';
 import { AuthController } from './controller/AuthController';
+import {WishesController} from "./controller/WishesController";
 
 const app = express();
 app.use(express.json());
@@ -15,6 +16,7 @@ app.use(cors());
 app.use(morgan('combined'));
 
 app.use('/auth', AuthController);
+app.use('/wishes', WishesController);
 
 connect();
 
